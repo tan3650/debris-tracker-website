@@ -1,12 +1,15 @@
 # Debris Tracker web console
 
 **Site:** https://tan3650.github.io/debris-tracker-website/frontend/
+
 **Code:** https://github.com/tan3650/debris-tracker-website
+
 **Deployed at** https://tan3650.github.io/debris-tracker-website/frontend/
+
 **TOKEN** (random, changes every start(server)): U47AKzQ7SZU62ymOfBuodcIi
 
 ## For judges
-
+Open two command prompt windows.
 The site has two modes, shown in its Connection window.
 
 **Demo mode (always available).** The site reads the saved results in `data/results/` from a real MATLAB run. It works at any time, on any device, and needs nothing running on our side.
