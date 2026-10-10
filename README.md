@@ -3,7 +3,7 @@
 https://tan3650.github.io/debris-tracker-website/frontend/
 https://posing-overhead-beads-downloaded.trycloudflare.com  
 U47AKzQ7SZU62ymOfBuodcIi
-
+or (orion) files are put here for testing from judges' side as bmp images are rare. These images have not been masked with any synthetic debris and were not used to test the algorithms or models.
 ```
 Browser (GitHub Pages)  ->  tunnel  ->  server/server.py (your PC)  ->  matlab -batch "main; track_debris"
         ^                                                                       |
