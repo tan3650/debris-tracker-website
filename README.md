@@ -1,4 +1,4 @@
-# Debris Tracker web console
+# VIGIL-Visual-Identification-and-Geometric-Inference-of-orbital-debris-Lines
 
 **Site:** https://tan3650.github.io/debris-tracker-website/frontend/
 
