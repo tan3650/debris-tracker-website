@@ -9,7 +9,9 @@
 **TOKEN** (random, changes every start(server)): U47AKzQ7SZU62ymOfBuodcIi
 
 ## For judges
+This website is using a PC as a server through tunneling since MATLAB Web App Server is a paid service. So, we thought of MATLAB runs on a local PC and the website reaches it through a tunnel.
 Open two command prompt windows.
+
 The site has two modes, shown in its Connection window.
 
 **Demo mode (always available).** The site reads the saved results in `data/results/` from a real MATLAB run. It works at any time, on any device, and needs nothing running on our side.
