@@ -24,6 +24,8 @@ Why a laptop acts as the server: MATLAB Web App Server is a paid service, so MAT
 
 Because BMP images are hard to find, a set of real star-field images (Orion) is provided for judges to test with: **[add folder or link here]**. These images have no synthetic debris added and were not used to tune or test the algorithms or models. Upload 3 to 12 BMP files of the same size in live mode. Uploaded images have no ground truth, so the site shows detections and tracks but no accuracy score.
 
+<img width="1920" height="1080" alt="Implemented Connected components, 8-connectivity detect_core m calls bwconncomp(mask, 8), and again on the closed mask for dash grouping  Geometric features via regionprops it records bounding box" src="https://github.com/user-attachments/assets/2749f87e-14d8-41c2-b883-85d3cb6a4ee7" />
+
 ## How it works
 
 ```
