@@ -1,102 +1,116 @@
 # Debris Tracker web console
 
-https://tan3650.github.io/debris-tracker-website/frontend/
-https://posing-overhead-beads-downloaded.trycloudflare.com  
-U47AKzQ7SZU62ymOfBuodcIi
-or (orion) files are put here for testing from judges' side as bmp images are rare. These images have not been masked with any synthetic debris and were not used to test the algorithms or models.
+**Site:** https://tan3650.github.io/debris-tracker-website/frontend/
+**Code:** https://github.com/tan3650/debris-tracker-website
+**Deployed at** https://tan3650.github.io/debris-tracker-website/frontend/
+**TOKEN** (random, changes every start(server)): U47AKzQ7SZU62ymOfBuodcIi
+
+## For judges
+
+The site has two modes, shown in its Connection window.
+
+**Demo mode (always available).** The site reads the saved results in `data/results/` from a real MATLAB run. It works at any time, on any device, and needs nothing running on our side.
+
+**Live mode (during the presentation only).** Pressing Run sends frames to MATLAB on the presenter's own laptop, and the page then shows the fresh results. This only works while that laptop is on and running MATLAB, a small bridge server (`server/server.py`) and a secure tunnel. The tunnel address and access token change every session, so they are started just before presenting and stopped afterwards. At any other time the site shows demo mode, which is expected, not a fault.
+
+Why a laptop acts as the server: MATLAB Web App Server is a paid service, so MATLAB runs on a local PC and the website reaches it through a tunnel.
+
+### Sample images for testing
+
+Because BMP images are hard to find, a set of real star-field images (Orion) is provided for judges to test with: **[add folder or link here]**. These images have no synthetic debris added and were not used to tune or test the algorithms or models. Upload 3 to 12 BMP files of the same size in live mode. Uploaded images have no ground truth, so the site shows detections and tracks but no accuracy score.
+
+## How it works
+
 ```
 Browser (GitHub Pages)  ->  tunnel  ->  server/server.py (your PC)  ->  matlab -batch "main; track_debris"
         ^                                                                       |
         +------------------ data/results/*.json, *.csv, *.png <----------------+
 ```
 
-Two modes, shown in the Connection window:
-- **DEMO**: reads the saved files in `data/results/` from the repository. MATLAB is not running.
-- **LIVE**: your PC runs MATLAB when you press a button; the page then shows the fresh results.
+## Running live mode (server, token and tunnel)
 
-## 1. Copy the files into your repo
+You need two Command Prompt windows. No Cloudflare account or Cloudflare token is needed. These commands are for Command Prompt, not PowerShell.
 
-```
-debris-tracker/
-  frontend/   index.html  style.css  app.js
-  server/     server.py   requirements.txt
-```
+**One-time setup**
 
-Add to `.gitignore`:
+1. Install Python, MATLAB R2021a or newer with the Image Processing Toolbox, and cloudflared:
+   ```bat
+   winget install --id Cloudflare.cloudflared
+   ```
+2. Install the server's requirement from the project folder:
+   ```bat
+   cd server
+   pip install -r requirements.txt
+   ```
+3. In `debris_defaults.m`, make sure `cfg.blink = false;` and `tc.blink = false;`. The blink tool opens an interactive window that hangs batch mode, and the server refuses to run while either is true.
+4. Test MATLAB once by hand from the project folder: `matlab -batch "main; track_debris"`. If it does not finish and write `data\results\tracks.json`, the server cannot work either.
 
-```
-data/results/last_frames/
-data/_swap_backup/
-```
+**Every time you present**
 
-## 2. Two edits so MATLAB can run unattended
+1. **Window 1: start the server.**
+   ```bat
+   cd C:\path\to\debris-tracker\server
+   set ALLOWED_ORIGINS=https://tan3650.github.io
+   python server.py
+   ```
+   The server prints a random access token on the line `TOKEN (random, changes every start)`. Copy it. To use your own fixed token instead, run `set DEBRIS_TOKEN=your-long-random-secret` (20 or more characters) before `python server.py`. If MATLAB is not found, set its full path first, for example `set MATLAB_EXE=C:\Program Files\MATLAB\R2024b\bin\matlab.exe`.
 
-In `debris_defaults.m` set both blink flags to false (the blink tool opens an interactive window and would hang `matlab -batch`; the server refuses to run while they are true):
+2. **Window 2: start the tunnel.**
+   ```bat
+   cloudflared tunnel --url http://127.0.0.1:5000
+   ```
+   It prints an address like `https://random-words.trycloudflare.com`. This address changes every time the tunnel starts.
 
-```matlab
-cfg.blink = false;
-tc.blink  = false;
-```
+3. **Check the tunnel.** Open the tunnel address followed by `/api/health` in a browser. It should show text starting with `{"ok":true`.
 
-Needs MATLAB R2019a or newer (`-batch`) and the Image Processing Toolbox, as before.
-Test it once by hand from the repo folder: `matlab -batch "main; track_debris"`. If that does not finish and write `data\results\tracks.json`, the server cannot work either.
+4. **Connect the site.** Open the site and, in the Connection window, enter the full tunnel address (nothing after `.com`) and the token. Press **Connect**, then run on the sample data or upload BMP frames.
 
-## 3. Start the server (Windows PowerShell)
+5. **Stop everything when you finish.** Press Ctrl+C in both windows. Anyone with the tunnel address and the token can start MATLAB on this PC, so the tunnel should not stay open.
 
-```powershell
-cd C:\Users\Test\OneDrive\Desktop\debris-tracker\server
-pip install -r requirements.txt
-$env:DEBRIS_TOKEN = "choose-a-long-random-secret"
-# if "matlab" is not found on PATH:
-# $env:MATLAB_EXE = "C:\Program Files\MATLAB\R2024b\bin\matlab.exe"
-python server.py
-```
+**Never write the tunnel address or the token in this README or in any file in the repository.**
 
-The console prints the repo path, whether MATLAB was found, and the allowed origin.
+**If something fails**
+
+- **"Failed to fetch":** check that the server window is running, that `ALLOWED_ORIGINS` was set before `python server.py`, and that the Server URL has no trailing path.
+- **502 error on the tunnel address:** the server is not running on port 5000.
+- **MATLAB not found:** set `MATLAB_EXE` as shown above.
 
 ### Test locally first (no tunnel)
 
-```powershell
-# terminal 1 (server also allows the local page)
-$env:ALLOWED_ORIGINS = "https://tan3650.github.io,http://localhost:8000"
+```bat
+:: window 1
+cd C:\path\to\debris-tracker\server
+set DEBRIS_TOKEN=choose-a-long-random-secret
+set ALLOWED_ORIGINS=https://tan3650.github.io,http://localhost:8000
 python server.py
-# terminal 2, from the repo root
+```
+
+```bat
+:: window 2, from the project folder
 python -m http.server 8000
 ```
 
-Open `http://localhost:8000/frontend/`, enter `http://localhost:5000` and your token, press Connect, then Run on sample data.
+Open `http://localhost:8000/frontend/`, enter `http://127.0.0.1:5000` and your token, press Connect, then Run on the sample data.
 
-## 4. Tunnel (so the GitHub Pages site can reach your PC)
+## Publishing the site
 
-Cloudflare quick tunnel (no account needed; the address changes every time):
+Push the repository, then on GitHub go to Settings, Pages, and deploy from branch `main`, folder `/ (root)`. Demo mode reads `data/results/` and `data/frames_bmp_debris/`, so commit those folders.
 
-```powershell
-cloudflared tunnel --url http://localhost:5000
-```
+## What happens on an upload run
 
-Copy the `https://....trycloudflare.com` address it prints into the site's Server URL box. (ngrok works the same way: `ngrok http 5000`.)
+Uploaded frames are saved to a separate run folder under your temp directory, and MATLAB is pointed at it through the `DEBRIS_IN_DIR`, `DEBRIS_OUT_DIR` and `DEBRIS_NO_TRUTH` environment variables (read by `debris_paths.m`). The sample frames, `debris_truth.mat` and the saved results are never moved or overwritten, and only the newest 3 upload runs are kept. Uploaded runs have no ground truth, so the accuracy panel says so.
 
-## 5. Publish the site
+## Safety (this endpoint can run MATLAB on your PC)
 
-Push the repo, then on GitHub: Settings -> Pages -> Deploy from branch `main`, folder `/ (root)`.
-The site will be at `https://tan3650.github.io/debris-tracker/frontend/`
-(demo mode reads `../data/results/` and `../data/frames_bmp_debris/`, so commit those folders).
-
-## 6. Safety rules (this endpoint can run MATLAB on your PC)
-
-- Use a long random `DEBRIS_TOKEN`; never commit it. Anyone with the tunnel address AND the token can start a MATLAB run.
-- Only run the tunnel while you are presenting; stop it afterwards.
-- Do not widen `ALLOWED_ORIGINS` to `*`. The server also locks it to the listed sites.
-- The server never runs anything the page sends: the command is fixed (`MATLAB_CMD`). Uploads are checked as real BMPs, capped at 12 files of 8 MB, and stored under names the server picks.
-- It listens on 127.0.0.1 only; the tunnel is the only way in.
-
-## 7. What happens on an upload run
-
-The server temporarily moves your sample frames and `debris_truth.mat` to `data/_swap_backup`, writes the uploaded frames as `debris_01.bmp...`, runs MATLAB, then **restores your originals** (also automatically at the next server start if a crash interrupted it). Uploaded runs have no ground truth, so the accuracy panel says so. The page flags any result file that the run did not rewrite (for example `blink.gif`, which only `blink_frames.m` makes).
+- Use a long random token and never commit it. Anyone with the tunnel address and the token can start a MATLAB run.
+- Only run the tunnel while presenting, and stop it afterwards.
+- Do not widen `ALLOWED_ORIGINS` to `*`. The server only accepts the listed sites.
+- The server never runs anything the page sends: the command is fixed (`MATLAB_CMD`). Uploads are checked as real BMPs, limited to 12 files of 8 MB each, and stored under names the server picks.
+- It listens on 127.0.0.1 only, so the tunnel is the only way in.
 
 ## Known limits
 
-- It only works while your PC, MATLAB, the server and the tunnel are all running; otherwise use DEMO mode.
+- Live mode only works while the PC, MATLAB, the server and the tunnel are all running. Otherwise use demo mode.
 - One run at a time. A run times out after 20 minutes (`MATLAB_TIMEOUT`).
-- `tracks.json` was not available when this was written; the track window reads `tracks.csv` for the paths and uses `tracks.json` best-effort (speed, heading, predictions, ellipses, PINN). If an overlay is missing, check that file's structure.
+- The track window reads `tracks.csv` for the paths and `tracks.json` for speed, heading, predictions, ellipses and PINN. If an overlay is missing, check the structure of that file.
 - Coordinates are image pixels, not sky coordinates.
